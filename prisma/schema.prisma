@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Permission {
+  VIEW
+  EDIT
+}
+
+model User {
+  userId             String           @id() @default(uuid()) @db.Uuid
+  username           String           @db.VarChar(30)
+  email              String           @unique
+  password           String?
+  tokenVersion       Int              @default(1)
+  resetPasswordToken String?
+  imageId            String?          @unique @db.Uuid
+  image              Image?           @relation(fields: [imageId], references: [imageId])
+  document           Document?
+  editableDocuments  UsersDocuments[]
+}
+
+model Image {
+  imageId   String   @id @default(uuid()) @db.Uuid
+  filename  String?
+  user      User?
+  url       String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Document {
+  documentId      String           @id @default(uuid()) @db.Uuid
+  title           String           @default("Untitled")
+  documentContent Json
+  documentOwnerId String           @unique @db.Uuid
+  documentOwner   User             @relation(fields: [documentOwnerId], references: [userId])
+  documentEditors UsersDocuments[]
+  createdAt       DateTime         @default(now())
+  modifiedAt      DateTime?        @updatedAt
+}
+
+model UsersDocuments {
+  userId     String     @db.Uuid
+  user       User       @relation(fields: [userId], references: [userId])
+  documentId String     @db.Uuid
+  document   Document   @relation(fields: [documentId], references: [documentId])
+  permission Permission @default(VIEW)
+
+  @@id([userId, documentId])
+}
