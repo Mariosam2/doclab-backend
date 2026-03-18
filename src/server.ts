@@ -8,13 +8,12 @@ import authRouter from './routers/authRouter';
 
 const port = getEnvOrThrow('PORT');
 const app = express();
-
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(express.static('uploads'));
+app.use(cors({ origin: getEnvOrThrow('CLIENT_URL'), credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.use('/auth', authRouter);
-
 
 app.use(errorHandler);
 

@@ -4,6 +4,7 @@ import { AddDocumentSchema } from '@src/shared/schemas/AddDocumentSchema';
 import { returnValidationErrorsReponse } from '@src/shared/helpers';
 import { AddEditorSchema } from '@src/shared/schemas/AddEditorSchema';
 import { UpsertEditorPermissionSchema } from '@src/shared/schemas/UpsertPermissionSchema';
+import { cleanupDocumentRelations, deletDocumentImageFiles } from '@src/shared/storage';
 
 export const documents = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -126,6 +127,9 @@ export const deleteDocument = async (req: Request, res: Response, next: NextFunc
     if (typeof documentId !== 'string') {
       return res.status(400).json({ success: false, message: 'Bad request' });
     }
+
+    await cleanupDocumentRelations(documentId);
+
     await prisma.document.delete({
       where: { documentId },
     });

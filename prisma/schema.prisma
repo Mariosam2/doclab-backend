@@ -24,18 +24,18 @@ model User {
   password           String?
   tokenVersion       Int              @default(1)
   resetPasswordToken String?
-  imageId            String?          @unique @db.Uuid
-  image              Image?           @relation(fields: [imageId], references: [imageId])
+  avatarUrl          String?          @db.Text
   document           Document?
   editableDocuments  UsersDocuments[]
 }
 
-model Image {
-  imageId   String   @id @default(uuid()) @db.Uuid
-  filename  String?
-  user      User?
-  url       String   @db.Text
-  createdAt DateTime @default(now())
+model DocumentImage {
+  imageId    String   @id @default(uuid()) @db.Uuid
+  filename   String?
+  document   Document @relation(fields: [documentId], references: [documentId])
+  documentId String   @db.Uuid
+  url        String   @db.Text
+  createdAt  DateTime @default(now())
 }
 
 model Document {
@@ -45,6 +45,7 @@ model Document {
   documentOwnerId String           @unique @db.Uuid
   documentOwner   User             @relation(fields: [documentOwnerId], references: [userId])
   documentEditors UsersDocuments[]
+  documentImages  DocumentImage[]
   createdAt       DateTime         @default(now())
   modifiedAt      DateTime?        @updatedAt
 }

@@ -9,19 +9,20 @@ CREATE TABLE "User" (
     "password" TEXT,
     "tokenVersion" INTEGER NOT NULL DEFAULT 1,
     "resetPasswordToken" TEXT,
-    "imageId" UUID,
+    "avatarUrl" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("userId")
 );
 
 -- CreateTable
-CREATE TABLE "Image" (
+CREATE TABLE "DocumentImage" (
     "imageId" UUID NOT NULL,
     "filename" TEXT,
+    "documentId" UUID NOT NULL,
     "url" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Image_pkey" PRIMARY KEY ("imageId")
+    CONSTRAINT "DocumentImage_pkey" PRIMARY KEY ("imageId")
 );
 
 -- CreateTable
@@ -49,13 +50,10 @@ CREATE TABLE "UsersDocuments" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_imageId_key" ON "User"("imageId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Document_documentOwnerId_key" ON "Document"("documentOwnerId");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image"("imageId") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Document" ADD CONSTRAINT "Document_documentOwnerId_fkey" FOREIGN KEY ("documentOwnerId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -8,6 +8,7 @@ import {
   updateContent,
   upsertEditorPermission,
 } from '@src/controllers/documentController';
+import { handleUpload } from '@src/shared/storage';
 import { Router } from 'express';
 
 const documentRouter = Router();
@@ -15,7 +16,7 @@ const documentRouter = Router();
 documentRouter.get('/', documents);
 documentRouter.get('/:documentId', singleDocument);
 documentRouter.post('/add-document', addDocument);
-documentRouter.put('/update-content/:documentId', updateContent);
+documentRouter.put('/update-content/:documentId', handleUpload(""), updateContent);
 documentRouter.post('/add-editor', addEditor);
 documentRouter.post('/update-editor-permission', upsertEditorPermission);
 documentRouter.delete('/remove-editor/:documentId/:userId', removeEditor);
