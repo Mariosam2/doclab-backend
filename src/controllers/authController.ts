@@ -22,11 +22,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return returnValidationErrorsReponse(result, res);
     }
 
-    const { username, email, password } = result.data;
+    const { email, password } = result.data;
 
     const authUser = await prisma.user.findFirst({
       where: {
-        OR: [{ username }, { email }],
+        email,
       },
     });
 
@@ -124,7 +124,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { refreshToken } = req.cookies;
+    const refreshToken = req.cookies['RefreshToken'];
 
     if (!refreshToken) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });

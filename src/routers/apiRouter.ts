@@ -1,10 +1,7 @@
-import router from "express";
+import router from 'express';
+import documentRouter from './documentRouter';
 
-const authRouter = router();
+const apiRouter = router();
+apiRouter.use('/documents', documentRouter);
 
-authRouter.post("/login", (req, res) => {});
-authRouter.post("/register", (req, res) => {});
-authRouter.get("/refresh-token");
-authRouter.post("/logout", (req, res) => {});
-
-export default authRouter;
+export default apiRouter;
