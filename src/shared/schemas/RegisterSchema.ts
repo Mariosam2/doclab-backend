@@ -1,6 +1,8 @@
 import { z } from 'zod/v4';
 
 export const RegisterSchema = z.object({
+  firstname: z.string().min(1, 'Firstname cannot be empty'),
+  lastname: z.string().min(1, 'Lastname cannot be empty'),
   username: z.string().min(4, "Username's too short").max(30, "Username's too long"),
   email: z.email(),
   password: z

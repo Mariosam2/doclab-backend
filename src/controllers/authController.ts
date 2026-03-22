@@ -101,7 +101,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const refreshToken = req.cookies['RefreshToken'];
-    //console.log(refreshToken);
+    console.log(refreshToken);
     if (!refreshToken) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }

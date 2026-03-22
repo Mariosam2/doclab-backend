@@ -19,12 +19,17 @@ enum Permission {
 
 model User {
   userId             String           @id() @default(uuid()) @db.Uuid
+  googleId           String?          @unique
   username           String           @db.VarChar(30)
+  firstname          String
+  lastname           String
   email              String           @unique
   password           String?
   tokenVersion       Int              @default(1)
   resetPasswordToken String?
   avatarUrl          String?          @db.Text
+  createdAt          DateTime         @default(now())
+  updateAt           DateTime?        @updatedAt
   document           Document?
   editableDocuments  UsersDocuments[]
 }
@@ -47,7 +52,7 @@ model Document {
   documentEditors UsersDocuments[]
   documentImages  DocumentImage[]
   createdAt       DateTime         @default(now())
-  modifiedAt      DateTime?        @updatedAt
+  updatedAt       DateTime?        @updatedAt
 }
 
 model UsersDocuments {

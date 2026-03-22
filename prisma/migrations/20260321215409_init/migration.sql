@@ -4,12 +4,17 @@ CREATE TYPE "Permission" AS ENUM ('VIEW', 'EDIT');
 -- CreateTable
 CREATE TABLE "User" (
     "userId" UUID NOT NULL,
+    "googleId" TEXT,
     "username" VARCHAR(30) NOT NULL,
+    "firstname" TEXT NOT NULL,
+    "lastname" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT,
     "tokenVersion" INTEGER NOT NULL DEFAULT 1,
     "resetPasswordToken" TEXT,
     "avatarUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updateAt" TIMESTAMP(3),
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("userId")
 );
@@ -32,7 +37,7 @@ CREATE TABLE "Document" (
     "documentContent" JSONB NOT NULL,
     "documentOwnerId" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "modifiedAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Document_pkey" PRIMARY KEY ("documentId")
 );
@@ -45,6 +50,9 @@ CREATE TABLE "UsersDocuments" (
 
     CONSTRAINT "UsersDocuments_pkey" PRIMARY KEY ("userId","documentId")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

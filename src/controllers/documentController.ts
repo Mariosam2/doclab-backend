@@ -8,7 +8,8 @@ import { cleanupDocumentRelations, deletDocumentImageFiles } from '@src/shared/s
 
 export const documents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const documents = await prisma.document.findMany();
+    const { userId } = req.user as Express.User;
+    const documents = await prisma.document.findMany({ where: { documentOwnerId: userId } });
     return res.status(200).json({ success: true, data: documents });
   } catch (err) {
     next(err);
