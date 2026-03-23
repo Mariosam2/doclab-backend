@@ -10,15 +10,17 @@ export const uploadDocumentImage = async (req: Request, res: Response, next: Nex
     if (!file) {
       return res.status(400).json({ success: false, message: 'Bad request' });
     }
-
+    const url = getEnvOrThrow('BASE_URL') + `/uploads/${file.filename}`;
     const image = {
       filename: file.filename,
-      url: getEnvOrThrow('BASE_URL') + `/uploads/${file.filename}`,
+      url,
       documentId,
     };
     const newImage = await prisma.documentImage.create({ data: image });
 
-    return res.status(200).json({ success: true, idOut: newImage.imageId, message: 'Image uploaded successfully' });
+    return res
+      .status(200)
+      .json({ success: true, data: { url }, idOut: newImage.imageId, message: 'Image uploaded successfully' });
   } catch (error) {
     next(error);
   }

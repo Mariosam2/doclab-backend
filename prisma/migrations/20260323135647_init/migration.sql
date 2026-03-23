@@ -34,12 +34,27 @@ CREATE TABLE "DocumentImage" (
 CREATE TABLE "Document" (
     "documentId" UUID NOT NULL,
     "title" TEXT NOT NULL DEFAULT 'Untitled',
-    "documentContent" JSONB NOT NULL,
+    "documentContent" BYTEA,
     "documentOwnerId" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Document_pkey" PRIMARY KEY ("documentId")
+);
+
+-- CreateTable
+CREATE TABLE "DocumentInvite" (
+    "inviteId" UUID NOT NULL,
+    "documentId" UUID NOT NULL,
+    "createdBy" TEXT NOT NULL,
+    "permission" "Permission" NOT NULL DEFAULT 'EDIT',
+    "inviteToken" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedBy" TEXT,
+    "usedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DocumentInvite_pkey" PRIMARY KEY ("inviteId")
 );
 
 -- CreateTable
@@ -60,11 +75,17 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "Document_documentOwnerId_key" ON "Document"("documentOwnerId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "DocumentInvite_inviteToken_key" ON "DocumentInvite"("inviteToken");
+
 -- AddForeignKey
 ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Document" ADD CONSTRAINT "Document_documentOwnerId_fkey" FOREIGN KEY ("documentOwnerId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DocumentInvite" ADD CONSTRAINT "DocumentInvite_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UsersDocuments" ADD CONSTRAINT "UsersDocuments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

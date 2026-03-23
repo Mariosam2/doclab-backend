@@ -3,6 +3,7 @@ import {
   addEditor,
   deleteDocument,
   documents,
+  generateInviteLink,
   removeEditor,
   singleDocument,
   updateContent,
@@ -15,8 +16,9 @@ const documentRouter = Router();
 
 documentRouter.get('/', documents);
 documentRouter.get('/:documentId', singleDocument);
+documentRouter.post('/invite-link/:documentId', generateInviteLink);
 documentRouter.post('/add-document', addDocument);
-documentRouter.put('/update-content/:documentId', handleUpload(""), updateContent);
+documentRouter.put('/update-content/:documentId', handleUpload(''), updateContent);
 documentRouter.post('/add-editor', addEditor);
 documentRouter.post('/update-editor-permission', upsertEditorPermission);
 documentRouter.delete('/remove-editor/:documentId/:userId', removeEditor);

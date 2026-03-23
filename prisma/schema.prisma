@@ -46,13 +46,27 @@ model DocumentImage {
 model Document {
   documentId      String           @id @default(uuid()) @db.Uuid
   title           String           @default("Untitled")
-  documentContent Json
+  documentContent Bytes?
   documentOwnerId String           @unique @db.Uuid
   documentOwner   User             @relation(fields: [documentOwnerId], references: [userId])
   documentEditors UsersDocuments[]
   documentImages  DocumentImage[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime?        @updatedAt
+  documentInvites DocumentInvite[]
+}
+
+model DocumentInvite {
+  inviteId   String     @id @default(uuid()) @db.Uuid
+  documentId String     @db.Uuid
+  document   Document   @relation(fields: [documentId], references: [documentId])
+  createdBy  String
+  permission Permission @default(EDIT)
+  inviteToken      String     @unique @default(uuid())
+  expiresAt  DateTime
+  usedBy     String?
+  usedAt     DateTime?
+  createdAt  DateTime   @default(now())
 }
 
 model UsersDocuments {

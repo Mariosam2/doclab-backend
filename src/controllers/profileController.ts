@@ -10,7 +10,6 @@ export const singleProfile = async (req: Request, res: Response, next: NextFunct
         userId,
       },
       omit: {
-        userId: true,
         tokenVersion: true,
         password: true,
         resetPasswordToken: true,

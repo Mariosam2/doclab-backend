@@ -5,12 +5,16 @@ import { returnValidationErrorsReponse } from '@src/shared/helpers';
 import { AddEditorSchema } from '@src/shared/schemas/AddEditorSchema';
 import { UpsertEditorPermissionSchema } from '@src/shared/schemas/UpsertPermissionSchema';
 import { cleanupDocumentRelations, deletDocumentImageFiles } from '@src/shared/storage';
+import { CreateInviteSchema } from '@src/shared/schemas/CreateInviteSchema';
 
 export const documents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.user as Express.User;
-    const documents = await prisma.document.findMany({ where: { documentOwnerId: userId } });
-    return res.status(200).json({ success: true, data: documents });
+    const userDocuments = await prisma.document.findMany({ where: { documentOwnerId: userId } });
+    const editorDocuments = await prisma.document.findMany({
+      where: { documentEditors: { some: { userId } } },
+    });
+    return res.status(200).json({ success: true, data: { userDocuments, editorDocuments } });
   } catch (err) {
     next(err);
   }
@@ -46,6 +50,107 @@ export const addDocument = async (req: Request, res: Response, next: NextFunctio
     return res
       .status(200)
       .json({ success: true, idOut: document.documentId, message: 'document created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateInviteLink = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { documentId } = req.params;
+    const { userId } = req.user as Express.User;
+
+    
+    if (typeof documentId !== 'string') {
+      return res.status(400).json({ success: false, message: 'Bad request' });
+    }
+
+    const result = await CreateInviteSchema.safeParseAsync(req.body);
+    if (!result.success) {
+      return returnValidationErrorsReponse(result, res);
+    }
+
+    const { permission } = result.data;
+
+    const expiresInHours = 24;
+    await prisma.documentInvite.deleteMany({
+      where: {
+        documentId: documentId as string,
+        createdBy: userId,
+        usedAt: null,
+        expiresAt: { lte: new Date() },
+      },
+    });
+
+    const invite =
+      (await prisma.documentInvite.findFirst({
+        where: {
+          documentId: documentId as string,
+          createdBy: userId,
+          usedAt: null,
+          expiresAt: { gte: new Date() },
+        },
+      })) ??
+      (await prisma.documentInvite.create({
+        data: {
+          documentId: documentId as string,
+          createdBy: userId,
+          permission,
+          expiresAt: new Date(Date.now() + expiresInHours * 60 * 60 * 1000),
+        },
+      }));
+
+    const inviteLink = `${process.env.CLIENT_URL}/invite/${invite.inviteToken}`;
+    res.status(200).json({ success: true, data: { inviteLink } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { inviteToken } = req.params;
+    const { userId } = req.user as Express.User;
+
+    if (typeof inviteToken !== 'string') {
+      return res.status(400).json({ success: false, message: 'Bad request' });
+    }
+
+    const invite = await prisma.documentInvite.findFirst({
+      where: {
+        inviteToken: inviteToken as string,
+      },
+    });
+
+    const now = new Date();
+
+    if (invite?.expiresAt ?? now < now) {
+      return res.status(400).json({ success: false, message: 'Invite expired' });
+    }
+
+    if (invite?.usedAt || invite?.usedBy) {
+      return res.status(400).json({ success: false, message: 'Invite already used' });
+    }
+
+    await prisma.usersDocuments.create({
+      data: {
+        documentId: invite?.documentId as string,
+        userId,
+        permission: invite?.permission,
+      },
+    });
+
+    await prisma.documentInvite.update({
+      where: {
+        inviteToken: inviteToken as string,
+      },
+      data: {
+        usedAt: new Date(),
+        usedBy: userId,
+      },
+    });
+
+    return res.status(200).json({ success: true, message: 'Invite accepted successfully' });
   } catch (error) {
     next(error);
   }
