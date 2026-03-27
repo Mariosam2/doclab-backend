@@ -1,4 +1,5 @@
 import {
+  acceptInvite,
   addDocument,
   addEditor,
   deleteDocument,
@@ -17,6 +18,7 @@ const documentRouter = Router();
 documentRouter.get('/', documents);
 documentRouter.get('/:documentId', singleDocument);
 documentRouter.post('/invite-link/:documentId', generateInviteLink);
+documentRouter.post('/accept-invite/:inviteToken', acceptInvite);
 documentRouter.post('/add-document', addDocument);
 documentRouter.put('/update-content/:documentId', handleUpload(''), updateContent);
 documentRouter.post('/add-editor', addEditor);

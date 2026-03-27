@@ -107,6 +107,10 @@ export const generateInviteLink = async (req: Request, res: Response, next: Next
   }
 };
 
+
+
+
+
 export const acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { inviteToken } = req.params;
