@@ -53,19 +53,15 @@ model Document {
   documentImages  DocumentImage[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime?        @updatedAt
-  documentInvites DocumentInvite[]
+  shareLinks      ShareLink[]
 }
 
-model DocumentInvite {
-  inviteId   String     @id @default(uuid()) @db.Uuid
-  documentId String     @db.Uuid
+model ShareLink {
+  linkId     String     @id @default(uuid()) @db.Uuid
   document   Document   @relation(fields: [documentId], references: [documentId])
-  createdBy  String
-  permission Permission @default(EDIT)
-  inviteToken      String     @unique @default(uuid())
-  expiresAt  DateTime
-  usedBy     String?
-  usedAt     DateTime?
+  documentId String     @db.Uuid
+  permission Permission
+  expirestAt DateTime
   createdAt  DateTime   @default(now())
 }
 

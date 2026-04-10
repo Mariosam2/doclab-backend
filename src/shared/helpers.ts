@@ -34,10 +34,7 @@ export const messageFromPrismaError = (errorCode: string, model: string) => {
 export const returnValidationErrorsReponse = (result: z.ZodSafeParseResult<any>, res: Response) => {
   return res.status(400).json({
     success: false,
-    validationErrors: result.error?.issues.map((e) => ({
-      field: e.path.join('.'),
-      message: e.message,
-    })),
+    message: result.error?.issues[0].message,
   });
 };
 

@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       email: authUser.email,
     };
 
-    return res.status(200).json({ success: true, accessToken, user });
+    return res.status(200).json({ success: true, data: { accessToken, user } });
   } catch (err) {
     next(err);
   }
@@ -92,7 +92,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       email: newUser.email,
     };
 
-    return res.status(200).json({ success: true, accessToken, user });
+    return res.status(200).json({ success: true, data: { accessToken, user } });
   } catch (err) {
     next(err);
   }
@@ -101,7 +101,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const refreshToken = req.cookies['RefreshToken'];
-    console.log(refreshToken);
+    //console.log(refreshToken);
     if (!refreshToken) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -116,7 +116,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
     const accessToken = signTokensAndCookie(res, authUser);
 
-    return res.status(200).json({ success: true, accessToken });
+    return res.status(200).json({ success: true, data: { accessToken } });
   } catch (err) {
     next(err);
   }

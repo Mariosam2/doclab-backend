@@ -6,6 +6,7 @@ import { AddEditorSchema } from '@src/shared/schemas/AddEditorSchema';
 import { UpsertEditorPermissionSchema } from '@src/shared/schemas/UpsertPermissionSchema';
 import { cleanupDocumentRelations, deletDocumentImageFiles } from '@src/shared/storage';
 import { CreateInviteSchema } from '@src/shared/schemas/CreateInviteSchema';
+import { SaveInviteLinkSchema } from '@src/shared/schemas/SaveInviteLibkSchema';
 
 export const documents = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -55,63 +56,30 @@ export const addDocument = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const generateInviteLink = async (req: Request, res: Response, next: NextFunction) => {
+export const saveInviteLink = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { documentId } = req.params;
-    const { userId } = req.user as Express.User;
-
-    
-    if (typeof documentId !== 'string') {
-      return res.status(400).json({ success: false, message: 'Bad request' });
-    }
-
-    const result = await CreateInviteSchema.safeParseAsync(req.body);
+    const result = await SaveInviteLinkSchema.safeParseAsync(req.body);
     if (!result.success) {
       return returnValidationErrorsReponse(result, res);
     }
 
-    const { permission } = result.data;
+    const { documentId, uuid, permission } = result.data;
 
-    const expiresInHours = 24;
-    await prisma.documentInvite.deleteMany({
-      where: {
-        documentId: documentId as string,
-        createdBy: userId,
-        usedAt: null,
-        expiresAt: { lte: new Date() },
+    await prisma.shareLink.create({
+      data: {
+        linkId: uuid,
+        documentId,
+        permission,
       },
     });
 
-    const invite =
-      (await prisma.documentInvite.findFirst({
-        where: {
-          documentId: documentId as string,
-          createdBy: userId,
-          usedAt: null,
-          expiresAt: { gte: new Date() },
-        },
-      })) ??
-      (await prisma.documentInvite.create({
-        data: {
-          documentId: documentId as string,
-          createdBy: userId,
-          permission,
-          expiresAt: new Date(Date.now() + expiresInHours * 60 * 60 * 1000),
-        },
-      }));
-
-    const inviteLink = `${process.env.CLIENT_URL}/invite/${invite.inviteToken}`;
-    res.status(200).json({ success: true, data: { inviteLink } });
+    return res.status(200).json({ success: true, idOut: uuid, message: 'Invite link saved successfully' });
   } catch (error) {
     next(error);
   }
 };
 
-
-
-
-
-export const acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
+/* export const acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { inviteToken } = req.params;
     const { userId } = req.user as Express.User;
@@ -158,7 +126,7 @@ export const acceptInvite = async (req: Request, res: Response, next: NextFuncti
   } catch (error) {
     next(error);
   }
-};
+}; */
 
 export const updateContent = async (req: Request, res: Response, next: NextFunction) => {};
 

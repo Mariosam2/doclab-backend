@@ -43,18 +43,14 @@ CREATE TABLE "Document" (
 );
 
 -- CreateTable
-CREATE TABLE "DocumentInvite" (
-    "inviteId" UUID NOT NULL,
+CREATE TABLE "ShareLink" (
+    "linkId" UUID NOT NULL,
     "documentId" UUID NOT NULL,
-    "createdBy" TEXT NOT NULL,
-    "permission" "Permission" NOT NULL DEFAULT 'EDIT',
-    "inviteToken" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "usedBy" TEXT,
-    "usedAt" TIMESTAMP(3),
+    "permission" "Permission" NOT NULL,
+    "expirestAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "DocumentInvite_pkey" PRIMARY KEY ("inviteId")
+    CONSTRAINT "ShareLink_pkey" PRIMARY KEY ("linkId")
 );
 
 -- CreateTable
@@ -75,9 +71,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "Document_documentOwnerId_key" ON "Document"("documentOwnerId");
 
--- CreateIndex
-CREATE UNIQUE INDEX "DocumentInvite_inviteToken_key" ON "DocumentInvite"("inviteToken");
-
 -- AddForeignKey
 ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -85,7 +78,7 @@ ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREI
 ALTER TABLE "Document" ADD CONSTRAINT "Document_documentOwnerId_fkey" FOREIGN KEY ("documentOwnerId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DocumentInvite" ADD CONSTRAINT "DocumentInvite_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ShareLink" ADD CONSTRAINT "ShareLink_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UsersDocuments" ADD CONSTRAINT "UsersDocuments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
