@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { z } from 'zod/v4';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@src/lib/prisma';
+import { chromium } from 'playwright';
 
 export const getEnvOrThrow = (variableName: string): string => {
   const envVariable = process.env[variableName];
@@ -95,3 +96,32 @@ export const prosemirrorToHTML = (node: any): string => {
     })
     .join('');
 };
+
+export async function exportToPdf(html: string): Promise<Buffer> {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  await page.setContent(
+    `
+    <html>
+      <head>
+        <style>
+          body { font-family: sans-serif; padding: 40px; }
+          /* aggiungi qui gli stili del tuo editor TipTap */
+        </style>
+      </head>
+      <body>${html}</body>
+    </html>
+  `,
+    { waitUntil: 'networkidle' },
+  );
+
+  const pdf = await page.pdf({
+    format: 'A4',
+    margin: { top: '2cm', bottom: '2cm', left: '2cm', right: '2cm' },
+    printBackground: true,
+  });
+
+  await browser.close();
+  return pdf;
+}

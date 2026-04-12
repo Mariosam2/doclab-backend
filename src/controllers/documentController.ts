@@ -1,10 +1,19 @@
 import { NextFunction, Request, Response } from 'express';
 import { prisma } from '@src/lib/prisma';
 import { AddDocumentSchema } from '@src/shared/schemas/AddDocumentSchema';
-import { addDays, returnValidationErrorsReponse } from '@src/shared/helpers';
+import { addDays, exportToPdf, getEnvOrThrow, returnValidationErrorsReponse } from '@src/shared/helpers';
 import { cleanupDocumentRelations } from '@src/shared/storage';
 import { SaveInviteLinkSchema } from '@src/shared/schemas/SaveInviteLinkSchema';
 import { UpsertPermissionSchema } from '@src/shared/schemas/UpsertPermissionSchema';
+import { EditDocumentSchema } from '@src/shared/schemas/EditDocumentSchema';
+import { createOpenAI } from '@ai-sdk/openai';
+import { GenerateSummarySchema } from '@src/shared/schemas/GenerateSummarySchema';
+import { generateText } from 'ai';
+import { ExportPdfSchema } from '@src/shared/schemas/ExportPdfSchema';
+
+const openai = createOpenAI({
+  apiKey: getEnvOrThrow('OPENAI_API_KEY'),
+});
 
 const MAX_DOCUMENTS = 5;
 
@@ -50,7 +59,7 @@ export const addDocument = async (req: Request, res: Response, next: NextFunctio
     if (!result.success) {
       return returnValidationErrorsReponse(result, res);
     }
-    const { title, content } = result.data;
+    const { title } = result.data;
 
     const count = await prisma.document.count({
       where: { documentOwnerId: userId },
@@ -61,7 +70,7 @@ export const addDocument = async (req: Request, res: Response, next: NextFunctio
     }
 
     const document = await prisma.document.create({
-      data: { title, documentContent: content, documentOwnerId: userId },
+      data: { title, documentOwnerId: userId },
     });
 
     await prisma.usersDocuments.create({
@@ -71,6 +80,51 @@ export const addDocument = async (req: Request, res: Response, next: NextFunctio
     return res
       .status(200)
       .json({ success: true, idOut: document.documentId, message: 'Document created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const editDocument = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const params = req.params;
+
+    const body = {
+      ...req.body,
+      documentId: params.documentId,
+    };
+
+    const result = await EditDocumentSchema.safeParseAsync(body);
+    if (!result.success) {
+      return returnValidationErrorsReponse(result, res);
+    }
+    const { title, documentId } = result.data;
+    await prisma.document.update({
+      where: { documentId },
+      data: { title },
+    });
+
+    return res.status(200).json({ success: true, idOut: documentId, message: 'Document updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { documentId } = req.params;
+
+    if (typeof documentId !== 'string') {
+      return res.status(400).json({ success: false, message: 'Bad request' });
+    }
+
+    await cleanupDocumentRelations(documentId);
+
+    await prisma.document.delete({
+      where: { documentId },
+    });
+
+    return res.status(200).json({ success: true, idOut: documentId, message: 'Document deleted successfully' });
   } catch (error) {
     next(error);
   }
@@ -171,21 +225,54 @@ export const removeEditor = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
+export const generateSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { documentId } = req.params;
+    const result = await GenerateSummarySchema.safeParseAsync(req.body);
 
-    if (typeof documentId !== 'string') {
-      return res.status(400).json({ success: false, message: 'Bad request' });
+    if (!result.success) {
+      return returnValidationErrorsReponse(result, res);
     }
 
-    await cleanupDocumentRelations(documentId);
+    const { documentId } = result.data;
 
-    await prisma.document.delete({
+    const { documentPreview } = await prisma.document.findFirstOrThrow({
       where: { documentId },
+      select: { documentPreview: true },
     });
 
-    return res.status(200).json({ success: true, idOut: documentId, message: 'Document deleted successfully' });
+    const plainText =
+      documentPreview
+        ?.replace(/<img[^>]+>/g, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim() ?? '';
+
+    const summary = await generateText({
+      model: openai('gpt-4o-mini'),
+      prompt: `Summarize the following document: ${plainText}`,
+    });
+
+    return res.status(200).json({ success: true, data: summary.text });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportPdf = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await ExportPdfSchema.safeParseAsync(req.body);
+
+    if (!result.success) {
+      return returnValidationErrorsReponse(result, res);
+    }
+
+    const { htmlContent } = result.data;
+    const pdf = await exportToPdf(htmlContent);
+    const filename = `document-${Date.now()}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(pdf);
   } catch (error) {
     next(error);
   }

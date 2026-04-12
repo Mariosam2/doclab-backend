@@ -45,7 +45,7 @@ const socketServer = new Hocuspocus({
       },
       store: async ({ documentName: documentId, document }) => {
         const state = Buffer.from(Y.encodeStateAsUpdate(document));
-        console.log(state);
+        //console.log(state);
         await prisma.document.update({
           where: { documentId },
           data: { documentContent: state },
@@ -60,7 +60,7 @@ const socketServer = new Hocuspocus({
             where: { documentId },
             data: { documentPreview: preview },
           });
-          console.log(preview);
+          //console.log(preview);
         } catch (e) {
           console.error('Preview generation failed:', e);
         }

@@ -64,6 +64,10 @@ export const deletDocumentImageFiles = async (documentId: string) => {
 };
 
 export const cleanupDocumentRelations = async (documentId: string) => {
+  await prisma.shareLink.deleteMany({
+    where: { documentId },
+  });
+
   await prisma.usersDocuments.deleteMany({
     where: { documentId },
   });
