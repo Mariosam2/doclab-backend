@@ -15,6 +15,7 @@ datasource db {
 enum Permission {
   VIEW
   EDIT
+  OWNER
 }
 
 model User {
@@ -30,7 +31,7 @@ model User {
   avatarUrl          String?          @db.Text
   createdAt          DateTime         @default(now())
   updateAt           DateTime?        @updatedAt
-  document           Document?
+  document           Document[]
   editableDocuments  UsersDocuments[]
 }
 
@@ -47,7 +48,8 @@ model Document {
   documentId      String           @id @default(uuid()) @db.Uuid
   title           String           @default("Untitled")
   documentContent Bytes?
-  documentOwnerId String           @unique @db.Uuid
+  documentPreview String?
+  documentOwnerId String           @db.Uuid
   documentOwner   User             @relation(fields: [documentOwnerId], references: [userId])
   documentEditors UsersDocuments[]
   documentImages  DocumentImage[]
@@ -61,7 +63,7 @@ model ShareLink {
   document   Document   @relation(fields: [documentId], references: [documentId])
   documentId String     @db.Uuid
   permission Permission
-  expirestAt DateTime
+  expiresAt  DateTime
   createdAt  DateTime   @default(now())
 }
 

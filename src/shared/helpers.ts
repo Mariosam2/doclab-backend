@@ -62,3 +62,36 @@ export const invalidateTokens = async (userId: string) => {
     data: { tokenVersion: { increment: 1 } },
   });
 };
+
+export const addDays = (date: Date, days: number) => {
+  date.setDate(date.getDate() + days);
+  return date;
+};
+
+export const prosemirrorToHTML = (node: any): string => {
+  //console.log(node);
+  if (!node?.content) return '';
+  return node.content
+    .map((n: any) => {
+      switch (n.type) {
+        case 'paragraph':
+          console.log(n);
+          return `<p>${prosemirrorToHTML(n)}</p>`;
+        case 'text':
+          return n.text || '';
+        case 'heading':
+          return `<h${n.attrs?.level}>${prosemirrorToHTML(n)}</h${n.attrs?.level}>`;
+        case 'bulletList':
+          return `<ul>${prosemirrorToHTML(n)}</ul>`;
+        case 'listItem':
+          return `<li>${prosemirrorToHTML(n)}</li>`;
+        case 'imageResize':
+          console.log(n.attrs);
+          return `<div style="${n.attrs?.wrapperStyle}"><div style="${n.attrs?.containerStyle}"><img width="${n.attrs?.width}" height="auto" src="${n.attrs?.src}" /></div></div>`;
+
+        default:
+          return prosemirrorToHTML(n);
+      }
+    })
+    .join('');
+};

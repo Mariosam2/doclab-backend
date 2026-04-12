@@ -1,27 +1,23 @@
 import {
   addDocument,
-  addEditor,
   deleteDocument,
   documents,
+  getPermissions,
   removeEditor,
   saveInviteLink,
   singleDocument,
-  updateContent,
-  upsertEditorPermission,
+  upsertPermission,
 } from '@src/controllers/documentController';
-import { handleUpload } from '@src/shared/storage';
 import { Router } from 'express';
 
 const documentRouter = Router();
 
 documentRouter.get('/', documents);
-documentRouter.get('/:documentId', singleDocument);
 documentRouter.post('/invite-link/:documentId', saveInviteLink);
-/* documentRouter.post('/accept-invite/:inviteToken', acceptInvite); */
 documentRouter.post('/add-document', addDocument);
-documentRouter.put('/update-content/:documentId', handleUpload(''), updateContent);
-documentRouter.post('/add-editor', addEditor);
-documentRouter.post('/update-editor-permission', upsertEditorPermission);
+documentRouter.get('/permissions', getPermissions);
+documentRouter.post('/upsert-permission', upsertPermission);
+documentRouter.get('/:documentId', singleDocument);
 documentRouter.delete('/remove-editor/:documentId/:userId', removeEditor);
 documentRouter.delete('/delete-document/:documentId', deleteDocument);
 

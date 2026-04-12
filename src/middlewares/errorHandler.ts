@@ -18,5 +18,9 @@ export const errorHandler: ErrorRequestHandler = (err, req: Request, res: Respon
     });
   }
 
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ success: false, message: 'Maximum file size (5MB) exceeded' });
+  }
+
   return res.status(500).json({ success: false, message: 'Internal server error' });
 };

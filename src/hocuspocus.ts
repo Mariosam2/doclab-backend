@@ -3,8 +3,13 @@ import { Hocuspocus } from '@hocuspocus/server';
 import { prisma } from '@src/lib/prisma';
 import * as Y from 'yjs';
 import jwt from 'jsonwebtoken';
-import { getEnvOrThrow } from './shared/helpers';
+import { getEnvOrThrow, prosemirrorToHTML } from './shared/helpers';
 import { ITokenPayload } from './shared/interfaces/ITokenPayload';
+import { yXmlFragmentToProseMirrorRootNode } from 'y-prosemirror';
+import { getSchema } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import ResizableImage from 'tiptap-extension-resize-image';
+import Image from '@tiptap/extension-image';
 
 const socketServer = new Hocuspocus({
   async onAuthenticate({ documentName, token }) {
@@ -21,13 +26,11 @@ const socketServer = new Hocuspocus({
     if (!isOwner && !isCollaborator) {
       throw new Error('Not authorized');
     }
-
-    
   },
   extensions: [
     new Database({
       fetch: async ({ documentName: documentId }) => {
-        console.log('[3] fetch:', documentId);
+        //console.log('[3] fetch:', documentId);
         const doc = await prisma.document.findUnique({
           where: { documentId },
         });
@@ -42,11 +45,25 @@ const socketServer = new Hocuspocus({
       },
       store: async ({ documentName: documentId, document }) => {
         const state = Buffer.from(Y.encodeStateAsUpdate(document));
-
+        console.log(state);
         await prisma.document.update({
           where: { documentId },
           data: { documentContent: state },
         });
+
+        try {
+          const schema = getSchema([StarterKit, ResizableImage, Image]);
+          const json = yXmlFragmentToProseMirrorRootNode(document.getXmlFragment('default'), schema);
+          const preview = prosemirrorToHTML(json.toJSON());
+
+          await prisma.document.update({
+            where: { documentId },
+            data: { documentPreview: preview },
+          });
+          console.log(preview);
+        } catch (e) {
+          console.error('Preview generation failed:', e);
+        }
       },
     }),
   ],

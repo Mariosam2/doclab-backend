@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Permission" AS ENUM ('VIEW', 'EDIT');
+CREATE TYPE "Permission" AS ENUM ('VIEW', 'EDIT', 'OWNER');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -35,6 +35,7 @@ CREATE TABLE "Document" (
     "documentId" UUID NOT NULL,
     "title" TEXT NOT NULL DEFAULT 'Untitled',
     "documentContent" BYTEA,
+    "documentPreview" TEXT,
     "documentOwnerId" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -47,7 +48,7 @@ CREATE TABLE "ShareLink" (
     "linkId" UUID NOT NULL,
     "documentId" UUID NOT NULL,
     "permission" "Permission" NOT NULL,
-    "expirestAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ShareLink_pkey" PRIMARY KEY ("linkId")
@@ -67,9 +68,6 @@ CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Document_documentOwnerId_key" ON "Document"("documentOwnerId");
 
 -- AddForeignKey
 ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
