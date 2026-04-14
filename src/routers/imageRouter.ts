@@ -4,6 +4,6 @@ import { Router } from 'express';
 
 const imageRouter = Router();
 
-imageRouter.post('/upload/document-image', handleUpload('image'), uploadDocumentImage);
+imageRouter.post('/upload', handleUpload('image'), uploadDocumentImage);
 
 export default imageRouter;

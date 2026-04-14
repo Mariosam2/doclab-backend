@@ -4,6 +4,8 @@ import { z } from 'zod/v4';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@src/lib/prisma';
 import { chromium } from 'playwright';
+import { unlink } from 'fs/promises';
+import path from 'path';
 
 export const getEnvOrThrow = (variableName: string): string => {
   const envVariable = process.env[variableName];
@@ -125,3 +127,25 @@ export async function exportToPdf(html: string): Promise<Buffer> {
   await browser.close();
   return pdf;
 }
+
+export const syncDocumentImages = async (documentId: string, htmlContent: string) => {
+  // Trova tutte le immagini attualmente nel DB per questo documento
+  const dbImages = await prisma.image.findMany({
+    where: { documentId },
+  });
+
+  // Estrai le URL/filename presenti nell'HTML attuale
+  const usedFilenames = new Set([...htmlContent.matchAll(/src="[^"]*\/uploads\/([^"]+)"/g)].map((m) => m[1]));
+
+  // Trova le immagini orfane (nel DB ma non più nel documento)
+  const orphaned = dbImages.filter((img) => !usedFilenames.has(img.filename!));
+
+  // Cancella da disco + DB
+  await Promise.all(orphaned.map((img) => unlink(path.resolve('uploads', img.filename!)).catch(() => {})));
+
+  if (orphaned.length > 0) {
+    await prisma.image.deleteMany({
+      where: { imageId: { in: orphaned.map((img) => img.imageId) } },
+    });
+  }
+};

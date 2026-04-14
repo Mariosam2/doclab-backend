@@ -3,7 +3,7 @@ import { Hocuspocus } from '@hocuspocus/server';
 import { prisma } from '@src/lib/prisma';
 import * as Y from 'yjs';
 import jwt from 'jsonwebtoken';
-import { getEnvOrThrow, prosemirrorToHTML } from './shared/helpers';
+import { getEnvOrThrow, prosemirrorToHTML, syncDocumentImages } from './shared/helpers';
 import { ITokenPayload } from './shared/interfaces/ITokenPayload';
 import { yXmlFragmentToProseMirrorRootNode } from 'y-prosemirror';
 import { getSchema } from '@tiptap/core';
@@ -45,7 +45,7 @@ const socketServer = new Hocuspocus({
       },
       store: async ({ documentName: documentId, document }) => {
         const state = Buffer.from(Y.encodeStateAsUpdate(document));
-        //console.log(state);
+
         await prisma.document.update({
           where: { documentId },
           data: { documentContent: state },
@@ -55,6 +55,8 @@ const socketServer = new Hocuspocus({
           const schema = getSchema([StarterKit, ResizableImage, Image]);
           const json = yXmlFragmentToProseMirrorRootNode(document.getXmlFragment('default'), schema);
           const preview = prosemirrorToHTML(json.toJSON());
+
+          await syncDocumentImages(documentId, preview); // HTML qui
 
           await prisma.document.update({
             where: { documentId },

@@ -20,14 +20,15 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "DocumentImage" (
+CREATE TABLE "Image" (
     "imageId" UUID NOT NULL,
     "filename" TEXT,
-    "documentId" UUID NOT NULL,
+    "userId" UUID,
+    "documentId" UUID,
     "url" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "DocumentImage_pkey" PRIMARY KEY ("imageId")
+    CONSTRAINT "Image_pkey" PRIMARY KEY ("imageId")
 );
 
 -- CreateTable
@@ -69,8 +70,14 @@ CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Image_userId_key" ON "Image"("userId");
+
 -- AddForeignKey
-ALTER TABLE "DocumentImage" ADD CONSTRAINT "DocumentImage_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Image" ADD CONSTRAINT "Image_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("documentId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Document" ADD CONSTRAINT "Document_documentOwnerId_fkey" FOREIGN KEY ("documentOwnerId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

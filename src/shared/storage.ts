@@ -50,7 +50,7 @@ export const handleUpload = (field: string) => {
 };
 
 export const deletDocumentImageFiles = async (documentId: string) => {
-  const images = await prisma.documentImage.findMany({
+  const images = await prisma.image.findMany({
     where: { documentId },
     select: { filename: true },
   });
@@ -74,7 +74,7 @@ export const cleanupDocumentRelations = async (documentId: string) => {
 
   await deletDocumentImageFiles(documentId);
 
-  await prisma.documentImage.deleteMany({
+  await prisma.image.deleteMany({
     where: { documentId },
   });
 };
